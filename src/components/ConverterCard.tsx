@@ -42,15 +42,37 @@ const ConverterCard: React.FC<ConverterCardProps> = ({
     setResult(null);
 
     try {
+      console.log('Enviando petición a:', `https://conversor-backend.vercel.app${endpoint}`);
+      console.log('Datos:', { amount: Number(amount) });
+      
       const response = await axios.post(`https://conversor-backend.vercel.app${endpoint}`, {
         amount: Number(amount)
+      }, {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        timeout: 10000 // 10 segundos de timeout
       });
 
+      console.log('Respuesta recibida:', response.data);
       const conversionResult = response.data;
       setResult(conversionResult);
       onConversion(conversionResult);
     } catch (err: any) {
-      setError(err.response?.data?.error || 'Error en la conversión');
+      console.error('Error en la conversión:', err);
+      
+      if (err.code === 'ECONNABORTED') {
+        setError('Timeout: El servidor tardó demasiado en responder');
+      } else if (err.response) {
+        // El servidor respondió con un error
+        setError(err.response?.data?.error || `Error del servidor: ${err.response.status}`);
+      } else if (err.request) {
+        // La petición se hizo pero no hubo respuesta
+        setError('No se pudo conectar con el servidor. Verifica tu conexión a internet.');
+      } else {
+        // Error en la configuración de la petición
+        setError('Error en la petición: ' + err.message);
+      }
     } finally {
       setLoading(false);
     }
@@ -78,40 +100,39 @@ const ConverterCard: React.FC<ConverterCardProps> = ({
         <div className="input-group">
           <input
             type="number"
-            className="converter-input"
-            placeholder="Ingresa la cantidad"
             value={amount}
             onChange={handleInputChange}
             onKeyPress={handleKeyPress}
+            placeholder={`Ingresa cantidad en ${fromUnit}`}
             disabled={loading}
           />
           <span className="unit-label">{fromUnit}</span>
         </div>
         
-        <button
-          className="convert-button"
+        <button 
           onClick={handleConvert}
           disabled={loading || !amount}
+          className="convert-button"
         >
-          {loading ? <span className="loading"></span> : 'Convertir'}
+          {loading ? '🔄 Convirtiendo...' : '🔄 Convertir'}
         </button>
-        
-        {result && (
-          <div className="conversion-result">
-            <strong>{result.amount} {result.from}</strong>
-            <br />
-            = <strong>{result.result} {result.to}</strong>
-            {result.rate && (
-              <div style={{ fontSize: '0.9rem', marginTop: '0.5rem', opacity: 0.8 }}>
-                Tasa de cambio: {result.rate}
-              </div>
-            )}
-          </div>
-        )}
         
         {error && (
           <div className="error-message">
-            {error}
+            ❌ {error}
+          </div>
+        )}
+        
+        {result && (
+          <div className="result-display">
+            <div className="result-value">
+              <strong>{result.result} {result.to}</strong>
+            </div>
+            {result.rate && (
+              <div className="result-rate">
+                Tasa: 1 {result.from} = {result.rate} {result.to}
+              </div>
+            )}
           </div>
         )}
       </div>
