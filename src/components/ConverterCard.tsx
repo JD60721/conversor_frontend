@@ -103,8 +103,9 @@ const ConverterCard: React.FC<ConverterCardProps> = ({
             value={amount}
             onChange={handleInputChange}
             onKeyPress={handleKeyPress}
-            placeholder={`Ingresa cantidad en ${fromUnit}`}
+            placeholder="Ingresa cantidad"
             disabled={loading}
+            className="converter-input"
           />
           <span className="unit-label">{fromUnit}</span>
         </div>
