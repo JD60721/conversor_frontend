@@ -42,7 +42,7 @@ const ConverterCard: React.FC<ConverterCardProps> = ({
     setResult(null);
 
     try {
-      const response = await axios.post(`http://localhost:3001${endpoint}`, {
+      const response = await axios.post(`https://conversor-backend.vercel.app${endpoint}`, {
         amount: Number(amount)
       });
 
